@@ -1,0 +1,2008 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mt. Rainier Training Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            padding-bottom: 80px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+        }
+
+        .week-selector {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 10px 0;
+            margin-bottom: 20px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .week-btn {
+            min-width: 80px;
+            padding: 10px 15px;
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #4a5568;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .week-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+        }
+
+        .week-btn.completed {
+            background: #48bb78;
+            color: white;
+            border-color: transparent;
+        }
+
+        .phase-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .phase-header {
+            font-size: 12px;
+            font-weight: 600;
+            color: #667eea;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+
+        .week-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 15px;
+        }
+
+        .day-section {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .day-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .day-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .day-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .day-type {
+            font-size: 12px;
+            padding: 4px 10px;
+            background: #edf2f7;
+            color: #4a5568;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            transition: background 0.2s;
+        }
+
+        .checklist-item:hover {
+            background: #f7fafc;
+        }
+
+        .checkbox {
+            width: 22px;
+            height: 22px;
+            min-width: 22px;
+            border: 2px solid #cbd5e0;
+            border-radius: 6px;
+            margin-right: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .checkbox.checked {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: transparent;
+        }
+
+        .checkbox.checked::after {
+            content: '✓';
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .item-text {
+            flex: 1;
+            font-size: 14px;
+            color: #4a5568;
+            line-height: 1.5;
+        }
+
+        .item-text.completed {
+            text-decoration: line-through;
+            color: #a0aec0;
+        }
+
+        .notes-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .notes-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 8px;
+        }
+
+        .notes-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .notes-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .stat-box {
+            background: #f7fafc;
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #718096;
+            margin-top: 4px;
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 15px 20px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .prev-btn {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .next-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .nav-btn:active {
+            transform: scale(0.98);
+        }
+
+        .reset-btn {
+            background: #fc8181;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .completion-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #48bb78;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .summit-day {
+            background: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .summit-day h2 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .summit-day p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏔️ Mt. Rainier Training</h1>
+            <div class="progress-info">
+                <span style="font-size: 14px; color: #718096;">Overall Progress</span>
+                <span style="font-size: 14px; font-weight: 600; color: #2d3748;" id="overall-progress">0%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+            </div>
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="stat-value" id="weeks-completed">0</div>
+                    <div class="stat-label">Weeks Done</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="total-workouts">0</div>
+                    <div class="stat-label">Workouts</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="week-selector" id="week-selector"></div>
+
+        <div id="content"></div>
+    </div>
+
+    <div class="bottom-nav">
+        <button class="nav-btn prev-btn" id="prev-btn">← Previous Week</button>
+        <button class="nav-btn next-btn" id="next-btn">Next Week →</button>
+    </div>
+
+    <script>
+        const trainingData = {
+            phases: [
+                { phase: 1, name: "Base Building + Fat Loss", weeks: [1, 2, 3, 4] },
+                { phase: 2, name: "Strength Building", weeks: [5, 6, 7, 8] },
+                { phase: 3, name: "Endurance + Power", weeks: [9, 10, 11, 12] },
+                { phase: 4, name: "Peak Conditioning", weeks: [13, 14, 15, 16, 17] },
+                { phase: 5, name: "Taper + Event Prep", weeks: [18, 19, 20] }
+            ],
+            weeks: {
+                1: {
+                    phase: "Phase 1: Base Building + Fat Loss",
+                    dates: "Mar 22-28",
+                    days: {
+                        Monday: {
+                            type: "Strength",
+                            items: [
+                                "10 min warm-up: dynamic stretching + foam rolling",
+                                "Goblet Squats: 3x12",
+                                "Romanian Deadlifts: 3x10",
+                                "Walking Lunges: 3x10 each leg",
+                                "Step-ups (12-18\" box): 3x10 each leg",
+                                "Calf Raises: 3x15",
+                                "Plank: 3x45 sec",
+                                "Side Plank: 3x30 sec each side",
+                                "5 min cool-down stretching"
+                            ]
+                        },
+                        Tuesday: {
+                            type: "Cardio",
+                            items: [
+                                "Trail run 45-60 min (Zone 2, conversational pace) OR",
+                                "Hike 2-3 hours with 10 lb pack, 1000-1500 ft gain OR",
+                                "Stairmaster/incline treadmill 45-60 min",
+                                "15 min mobility: hip flexor stretches, IT band work"
+                            ]
+                        },
+                        Wednesday: {
+                            type: "Strength",
+                            items: [
+                                "10 min warm-up: light cardio + arm circles",
+                                "Pull-ups/Assisted Pull-ups: 3x8",
+                                "Overhead Press: 3x10",
+                                "Bent-over Rows: 3x12",
+                                "Dumbbell Chest Press: 3x10",
+                                "Climbing Gym: 45-60 min easy to moderate routes",
+                                "Forearm work: Wrist curls, reverse wrist curls 2x15"
+                            ]
+                        },
+                        Thursday: {
+                            type: "Recovery",
+                            items: [
+                                "Easy walk or bike 30-45 min",
+                                "Yoga or full body stretching routine 30 min",
+                                "Foam rolling: focus on IT bands, quads, calves"
+                            ]
+                        },
+                        Friday: {
+                            type: "Strength",
+                            items: [
+                                "10 min dynamic movement warm-up",
+                                "Front Squats: 3x10",
+                                "Single-leg Deadlifts: 3x8 each leg",
+                                "Weighted Step-ups: 3x10 each leg",
+                                "Push-ups: 3x15",
+                                "Dumbbell Rows: 3x10 each arm",
+                                "Lateral Lunges: 3x8 each side",
+                                "Dead bugs: 3x10",
+                                "Russian twists: 3x20",
+                                "Superman: 3x10"
+                            ]
+                        },
+                        Saturday: {
+                            type: "Long Hike",
+                            items: [
+                                "3-4 hour hike, 1500-2000 ft elevation gain",
+                                "15 lb pack weight",
+                                "Maintain Zone 2 heart rate",
+                                "Practice breathing rhythms",
+                                "Suggested: Mount Moosilauke, Mount Cardigan, or Mount Kearsarge"
+                            ]
+                        },
+                        Sunday: {
+                            type: "Rest",
+                            items: [
+                                "Complete rest OR easy ski/gentle walk 30-45 min",
+                                "Self-massage, stretching, mental preparation"
+                            ]
+                        }
+                    }
+                },
+                2: {
+                    phase: "Phase 1: Base Building + Fat Loss",
+                    dates: "Mar 29-Apr 4",
+                    days: {
+                        Monday: {
+                            type: "Strength",
+                            items: [
+                                "10 min warm-up: dynamic stretching + foam rolling",
+                                "Goblet Squats: 3x12",
+                                "Romanian Deadlifts: 3x10",
+                                "Walking Lunges: 3x10 each leg",
+                                "Step-ups (12-18\" box): 3x10 each leg",
+                                "Calf Raises: 3x15",
+                                "Plank: 3x45 sec",
+                                "Side Plank: 3x30 sec each side",
+                                "5 min cool-down stretching"
+                            ]
+                        },
+                        Tuesday: {
+                            type: "Cardio",
+                            items: [
+                                "Trail run 50-65 min (Zone 2) OR",
+                                "Hike 2-3 hours with 10 lb pack, 1000-1500 ft gain OR",
+                                "Stairmaster/incline treadmill 50-65 min",
+                                "15 min mobility work"
+                            ]
+                        },
+                        Wednesday: {
+                            type: "Strength",
+                            items: [
+                                "10 min warm-up",
+                                "Pull-ups/Assisted Pull-ups: 3x8",
+                                "Overhead Press: 3x10",
+                                "Bent-over Rows: 3x12",
+                                "Dumbbell Chest Press: 3x10",
+                                "Climbing Gym: 45-60 min",
+                                "Forearm work: 2x15"
+                            ]
+                        },
+                        Thursday: {
+                            type: "Recovery",
+                            items: [
+                                "Easy walk or bike 30-45 min",
+                                "Yoga or stretching 30 min",
+                                "Foam rolling"
+                            ]
+                        },
+                        Friday: {
+                            type: "Strength",
+                            items: [
+                                "10 min warm-up",
+                                "Front Squats: 3x10",
+                                "Single-leg Deadlifts: 3x8 each",
+                                "Weighted Step-ups: 3x10 each",
+                                "Push-ups: 3x15",
+                                "Dumbbell Rows: 3x10 each",
+                                "Lateral Lunges: 3x8 each",
+                                "Core circuit: Dead bugs, Russian twists, Superman"
+                            ]
+                        },
+                        Saturday: {
+                            type: "Long Hike",
+                            items: [
+                                "4-5 hour hike, 2000-2500 ft elevation gain",
+                                "15 lb pack weight",
+                                "Zone 2 heart rate",
+                                "Practice breathing and pacing"
+                            ]
+                        },
+                        Sunday: {
+                            type: "Rest",
+                            items: [
+                                "Complete rest OR easy activity 30-45 min",
+                                "Recovery work: stretching, self-massage"
+                            ]
+                        }
+                    }
+                },
+                3: {
+                    phase: "Phase 1: Base Building + Fat Loss",
+                    dates: "Apr 5-11",
+                    days: {
+                        Monday: {
+                            type: "Strength",
+                            items: [
+                                "10 min warm-up",
+                                "Goblet Squats: 3x12 (increase weight slightly)",
+                                "Romanian Deadlifts: 3x10",
+                                "Walking Lunges: 3x10 each leg",
+                                "Step-ups: 3x10 each leg",
+                                "Calf Raises: 3x15",
+                                "Core work: Planks and side planks",
+                                "5 min cool-down"
+                            ]
+                        },
+                        Tuesday: {
+                            type: "Cardio",
+                            items: [
+                                "Trail run 55-70 min (Zone 2) OR",
+                                "Hike 2.5-3 hours with 15 lb pack, 1200-1700 ft gain OR",
+                                "Stairmaster 55-70 min",
+                                "15 min mobility"
+                            ]
+                        },
+                        Wednesday: {
+                            type: "Strength",
+                            items: [
+                                "10 min warm-up",
+                                "Pull-ups: 3x8-10",
+                                "Overhead Press: 3x10",
+                                "Bent-over Rows: 3x12",
+                                "Dumbbell Chest Press: 3x10",
+                                "Climbing: 60 min moderate routes",
+                                "Forearm work"
+                            ]
+                        },
+                        Thursday: {
+                            type: "Recovery",
+                            items: [
+                                "Easy activity 30-45 min",
+                                "Yoga/stretching 30 min",
+                                "Foam rolling focus areas"
+                            ]
+                        },
+                        Friday: {
+                            type: "Strength",
+                            items: [
+                                "Full body strength session",
+                                "Front Squats: 3x10",
+                                "Single-leg work: 3x8 each",
+                                "Upper body push/pull",
+                                "Core circuit"
+                            ]
+                        },
+                        Saturday: {
+                            type: "Long Hike",
+                            items: [
+                                "4-5 hour hike, 2500-3000 ft elevation gain",
+                                "20 lb pack weight",
+                                "Practice efficient movement with heavier load"
+                            ]
+                        },
+                        Sunday: {
+                            type: "Rest",
+                            items: [
+                                "Rest or very easy activity",
+                                "Recovery protocols"
+                            ]
+                        }
+                    }
+                },
+                4: {
+                    phase: "Phase 1: Base Building + Fat Loss",
+                    dates: "Apr 12-18",
+                    days: {
+                        Monday: {
+                            type: "Strength",
+                            items: [
+                                "Lower body strength session",
+                                "Goblet Squats: 3x12",
+                                "Romanian Deadlifts: 3x10",
+                                "Lunges and step-ups",
+                                "Calf work",
+                                "Core exercises"
+                            ]
+                        },
+                        Tuesday: {
+                            type: "Cardio",
+                            items: [
+                                "60-75 min cardio session (Zone 2) OR",
+                                "Hike 3 hours with 20 lb pack",
+                                "Mobility work"
+                            ]
+                        },
+                        Wednesday: {
+                            type: "Strength",
+                            items: [
+                                "Upper body + climbing",
+                                "Pull-ups: 3x8-10",
+                                "Overhead Press: 3x10",
+                                "Rows: 3x12",
+                                "Climbing: 60 min"
+                            ]
+                        },
+                        Thursday: {
+                            type: "Recovery",
+                            items: [
+                                "Active recovery 30-45 min",
+                                "Stretching and mobility",
+                                "Prepare for big Saturday"
+                            ]
+                        },
+                        Friday: {
+                            type: "Strength",
+                            items: [
+                                "Full body session (moderate intensity)",
+                                "Maintain strength, don't overdo",
+                                "Save energy for Saturday"
+                            ]
+                        },
+                        Saturday: {
+                            type: "Long Hike",
+                            items: [
+                                "5-6 hour hike, 3000-3500 ft elevation gain",
+                                "20 lb pack weight",
+                                "Peak effort for Phase 1",
+                                "Assess fitness improvements"
+                            ]
+                        },
+                        Sunday: {
+                            type: "Rest",
+                            items: [
+                                "Complete rest",
+                                "Recovery and reflection on Phase 1",
+                                "Prepare for Phase 2 intensity increase"
+                            ]
+                        }
+                    }
+                },
+                5: {
+                    phase: "Phase 2: Strength Building",
+                    dates: "Apr 19-25",
+                    days: {
+                        Monday: {
+                            type: "Heavy Strength",
+                            items: [
+                                "10 min warm-up + mobility",
+                                "Back Squats: 4x6-8 (heavier weight)",
+                                "Deadlifts: 4x6",
+                                "Bulgarian Split Squats: 3x8 each leg",
+                                "Weighted Step-ups: 4x8 each leg",
+                                "Box Jumps: 3x10",
+                                "Weighted planks: 3x60 sec",
+                                "Ab wheel rollouts: 3x10"
+                            ]
+                        },
+                        Tuesday: {
+                            type: "Intervals",
+                            items: [
+                                "15 min warm-up",
+                                "Trail: 8x 3-5 min hard uphill, jog down OR",
+                                "Stairmaster: 10x 4 min hard, 2 min easy",
+                                "Wear 15-20 lb vest or pack",
+                                "15 min cool-down + stretching"
+                            ]
+                        },
+                        Wednesday: {
+                            type: "Upper Strength + Climbing",
+                            items: [
+                                "Warm-up: band work + arm circles",
+                                "Weighted Pull-ups: 4x6-8",
+                                "Barbell Overhead Press: 4x8",
+                                "Weighted Dips: 3x8-10",
+                                "Barbell Rows: 4x8",
+                                "Face Pulls: 3x15",
+                                "Climbing: 60-90 min, push grade",
+                                "Hangboard: 5x 10-sec max hangs, 3 min rest"
+                            ]
+                        },
+                        Thursday: {
+                            type: "Moderate Cardio",
+                            items: [
+                                "Trail run 60 min Zone 2-3 OR",
+                                "Hike 2-3 hours, 20 lb pack",
+                                "20 min full body stretching"
+                            ]
+                        },
+                        Friday: {
+                            type: "Power & Conditioning",
+                            items: [
+                                "Dynamic warm-up",
+                                "Power Cleans or KB Swings: 5x5",
+                                "Front Squats: 3x8",
+                                "Single-leg RDLs: 3x8 each",
+                                "Lateral Bounds: 3x10 each",
+                                "Farmer's Carry: 4x 50m (heavy)",
+                                "Circuit: Burpees, mountain climbers, jumping lunges - 3 rounds"
+                            ]
+                        },
+                        Saturday: {
+                            type: "Long Pack Carry",
+                            items: [
+                                "5-6 hours hiking, 3500 ft gain",
+                                "25 lb pack weight",
+                                "Practice rest step technique",
+                                "Work on pressure breathing"
+                            ]
+                        },
+                        Sunday: {
+                            type: "Active Recovery",
+                            items: [
+                                "Easy activity 45-60 min",
+                                "Full body stretching and foam rolling 30 min",
+                                "Optional: sauna or ice bath"
+                            ]
+                        }
+                    }
+                },
+                6: {
+                    phase: "Phase 2: Strength Building",
+                    dates: "Apr 26-May 2",
+                    days: {
+                        Monday: {
+                            type: "Heavy Strength",
+                            items: [
+                                "Back Squats: 4x6-8 (increase weight)",
+                                "Deadlifts: 4x6",
+                                "Bulgarian Split Squats: 3x8 each",
+                                "Weighted Step-ups: 4x8 each",
+                                "Box Jumps: 3x10",
+                                "Core: Weighted work"
+                            ]
+                        },
+                        Tuesday: {
+                            type: "Intervals",
+                            items: [
+                                "Hill/Stair intervals with 15-20 lb pack",
+                                "8-10 hard efforts",
+                                "Focus on power output uphill"
+                            ]
+                        },
+                        Wednesday: {
+                            type: "Upper + Climbing",
+                            items: [
+                                "Weighted Pull-ups: 4x6-8",
+                                "Overhead Press: 4x8",
+                                "Weighted Dips: 3x8-10",
+                                "Rows: 4x8",
+                                "Climbing: 60-90 min challenging routes",
+                                "Hangboard work"
+                            ]
+                        },
+                        Thursday: {
+                            type: "Cardio",
+                            items: [
+                                "60 min moderate cardio",
+                                "20 lb pack option",
+                                "Mobility work"
+                            ]
+                        },
+                        Friday: {
+                            type: "Power",
+                            items: [
+                                "Power work: Cleans or KB Swings",
+                                "Explosive movements",
+                                "Conditioning circuit"
+                            ]
+                        },
+                        Saturday: {
+                            type: "Long Pack Carry",
+                            items: [
+                                "6-7 hours hiking, 4000 ft gain",
+                                "25 lb pack weight",
+                                "Suggested: Mount Washington or Franconia Ridge"
+                            ]
+                        },
+                        Sunday: {
+                            type: "Recovery",
+                            items: [
+                                "Easy activity or complete rest",
+                                "Recovery protocols"
+                            ]
+                        }
+                    }
+                },
+                7: {
+                    phase: "Phase 2: Strength Building",
+                    dates: "May 3-9",
+                    days: {
+                        Monday: {
+                            type: "Heavy Strength",
+                            items: [
+                                "Back Squats: 4x6-8",
+                                "Deadlifts: 4x6",
+                                "Bulgarian Split Squats: 3x8 each",
+                                "Weighted Step-ups: 4x8 each",
+                                "Box Jumps: 3x10",
+                                "Core exercises"
+                            ]
+                        },
+                        Tuesday: {
+                            type: "Intervals",
+                            items: [
+                                "Hill intervals with 20 lb pack",
+                                "8-10 hard efforts",
+                                "Building power endurance"
+                            ]
+                        },
+                        Wednesday: {
+                            type: "Upper + Climbing",
+                            items: [
+                                "Upper body strength work",
+                                "Climbing: 60-90 min",
+                                "Focus on endurance climbing"
+                            ]
+                        },
+                        Thursday: {
+                            type: "Cardio",
+                            items: [
+                                "60 min Zone 2-3 cardio",
+                                "Mobility and stretching"
+                            ]
+                        },
+                        Friday: {
+                            type: "Power",
+                            items: [
+                                "Power and conditioning work",
+                                "Full body circuit"
+                            ]
+                        },
+                        Saturday: {
+                            type: "Long Pack Carry",
+                            items: [
+                                "6-7 hours hiking, 4000 ft gain",
+                                "30 lb pack weight (increase from last week)",
+                                "Test heavier load capacity"
+                            ]
+                        },
+                        Sunday: {
+                            type: "Recovery",
+                            items: [
+                                "Active recovery",
+                                "Prepare for final Phase 2 week"
+                            ]
+                        }
+                    }
+                },
+                8: {
+                    phase: "Phase 2: Strength Building",
+                    dates: "May 10-16",
+                    days: {
+                        Monday: {
+                            type: "Heavy Strength",
+                            items: [
+                                "Peak strength effort for Phase 2",
+                                "Back Squats: 4x6-8 (max effort)",
+                                "Deadlifts: 4x6",
+                                "Full lower body work",
+                                "Core strength"
+                            ]
+                        },
+                        Tuesday: {
+                            type: "Intervals",
+                            items: [
+                                "Hard interval session",
+                                "20 lb pack",
+                                "Peak intensity for phase"
+                            ]
+                        },
+                        Wednesday: {
+                            type: "Upper + Climbing",
+                            items: [
+                                "Upper body strength",
+                                "Climbing: challenge yourself",
+                                "Assess climbing fitness"
+                            ]
+                        },
+                        Thursday: {
+                            type: "Cardio",
+                            items: [
+                                "Moderate cardio",
+                                "Save energy for Saturday"
+                            ]
+                        },
+                        Friday: {
+                            type: "Power",
+                            items: [
+                                "Power work (moderate)",
+                                "Don't overdo before long day"
+                            ]
+                        },
+                        Saturday: {
+                            type: "Long Pack Carry",
+                            items: [
+                                "7-8 hours hiking, 4500 ft gain",
+                                "30 lb pack weight",
+                                "Peak effort for Phase 2",
+                                "Presidential Traverse section option"
+                            ]
+                        },
+                        Sunday: {
+                            type: "Recovery",
+                            items: [
+                                "Complete rest",
+                                "Phase 2 complete! Assess progress",
+                                "Prepare for highest volume phase"
+                            ]
+                        }
+                    }
+                },
+                9: {
+                    phase: "Phase 3: Endurance + Power",
+                    dates: "May 17-23",
+                    days: {
+                        Monday: {
+                            type: "Strength Endurance",
+                            items: [
+                                "Back Squats: 4x12-15 (lighter, more reps)",
+                                "Walking Lunges: 4x20 steps with dumbbells",
+                                "Leg Press: 3x20",
+                                "Step-ups with Knee Drive: 3x12 each",
+                                "Single-leg Squats: 3x8 each",
+                                "Calf Raises: 4x20",
+                                "Core endurance: 5 min plank hold (break as needed)"
+                            ]
+                        },
+                        Tuesday: {
+                            type: "Tempo",
+                            items: [
+                                "Trail run 75 min steady, challenging pace OR",
+                                "Fast hike 3-4 hours, 2500 ft gain, 25 lb pack",
+                                "Upper Zone 3 / lower Zone 4 effort",
+                                "Focus on sustainable hard pace"
+                            ]
+                        },
+                        Wednesday: {
+                            type: "Upper + Climbing Volume",
+                            items: [
+                                "Pull-ups: 4x10-12",
+                                "Overhead Press: 4x10",
+                                "Cable/Band Rows: 4x15",
+                                "Dumbbell Bench Press: 3x12",
+                                "Climbing: 90-120 min endurance work",
+                                "4x4s Protocol: 4 routes back to back, 4 times"
+                            ]
+                        },
+                        Thursday: {
+                            type: "Recovery Cardio",
+                            items: [
+                                "Easy 60 min activity (swim, bike, easy hike)",
+                                "Yoga or stretching 30 min",
+                                "Massage or foam rolling"
+                            ]
+                        },
+                        Friday: {
+                            type: "Circuit",
+                            items: [
+                                "High-intensity circuit (3-4 rounds):",
+                                "Goblet Squats x15",
+                                "Push-ups x15",
+                                "KB Swings x20",
+                                "Pull-ups x8",
+                                "Box Jumps x10",
+                                "Burpees x10",
+                                "Rest 3 min between rounds"
+                            ]
+                        },
+                        Saturday: {
+                            type: "Peak Long Day",
+                            items: [
+                                "7-8 hours hiking, 5000 ft gain",
+                                "35 lb pack weight (summit weight approached)",
+                                "Entering peak volume phase",
+                                "Practice sustained effort"
+                            ]
+                        },
+                        Sunday: {
+                            type: "Recovery",
+                            items: [
+                                "Easy walk 45 min + full body stretching OR",
+                                "Complete rest if needed"
+                            ]
+                        }
+                    }
+                },
+                10: {
+                    phase: "Phase 3: Endurance + Power",
+                    dates: "May 24-30",
+                    days: {
+                        Monday: {
+                            type: "Strength Endurance",
+                            items: [
+                                "Squats: 4x12-15",
+                                "Walking Lunges: 4x20",
+                                "Leg Press: 3x20",
+                                "Step-ups: 3x12 each",
+                                "Single-leg work",
+                                "Core endurance"
+                            ]
+                        },
+                        Tuesday: {
+                            type: "Tempo",
+                            items: [
+                                "75 min tempo run OR",
+                                "Fast hike 3-4 hours with 25 lb pack",
+                                "Sustained hard effort"
+                            ]
+                        },
+                        Wednesday: {
+                            type: "Upper + Climbing",
+                            items: [
+                                "Upper body endurance work",
+                                "Climbing: 90-120 min volume",
+                                "4x4s or continuous climbing"
+                            ]
+                        },
+                        Thursday: {
+                            type: "Recovery",
+                            items: [
+                                "Easy 60 min cardio",
+                                "Yoga/stretching",
+                                "Recovery focus"
+                            ]
+                        },
+                        Friday: {
+                            type: "Circuit",
+                            items: [
+                                "Full body circuit 3-4 rounds",
+                                "High intensity",
+                                "Conditioning focus"
+                            ]
+                        },
+                        Saturday: {
+                            type: "Peak Long Day",
+                            items: [
+                                "8-10 hours hiking, 5500 ft gain",
+                                "35 lb pack weight",
+                                "Longest training day of program",
+                                "Mental toughness practice"
+                            ]
+                        },
+                        Sunday: {
+                            type: "Recovery",
+                            items: [
+                                "Rest or very easy activity",
+                                "Recovery after big day"
+                            ]
+                        }
+                    }
+                },
+                11: {
+                    phase: "Phase 3: Endurance + Power",
+                    dates: "May 31-Jun 6",
+                    days: {
+                        Monday: {
+                            type: "Strength Endurance",
+                            items: [
+                                "Lower body endurance work",
+                                "High rep schemes",
+                                "Core endurance"
+                            ]
+                        },
+                        Tuesday: {
+                            type: "Tempo",
+                            items: [
+                                "Tempo cardio session",
+                                "75 min sustained effort"
+                            ]
+                        },
+                        Wednesday: {
+                            type: "Upper + Climbing",
+                            items: [
+                                "Upper body work",
+                                "Climbing volume session",
+                                "Endurance focus"
+                            ]
+                        },
+                        Thursday: {
+                            type: "Recovery",
+                            items: [
+                                "Easy recovery day",
+                                "Prepare for overnight trip"
+                            ]
+                        },
+                        Friday: {
+                            type: "Light",
+                            items: [
+                                "Light circuit or yoga",
+                                "Pack and prep for overnight",
+                                "Rest emphasis"
+                            ]
+                        },
+                        Saturday: {
+                            type: "OVERNIGHT TRIP",
+                            items: [
+                                "Day 1: Hike in with full overnight pack",
+                                "Set up camp",
+                                "Practice high-elevation camping",
+                                "Total 6000+ ft gain over 2 days"
+                            ]
+                        },
+                        Sunday: {
+                            type: "OVERNIGHT TRIP",
+                            items: [
+                                "Day 2: Hike out",
+                                "Test multi-day endurance",
+                                "Suggested: Overnight on Washington or Pemi Loop",
+                                "Complete rest after return"
+                            ]
+                        }
+                    }
+                },
+                12: {
+                    phase: "Phase 3: Endurance + Power",
+                    dates: "Jun 7-13",
+                    days: {
+                        Monday: {
+                            type: "Strength Endurance",
+                            items: [
+                                "Lower body endurance (lighter than previous weeks)",
+                                "Recovery week within phase",
+                                "Maintain fitness, allow recovery"
+                            ]
+                        },
+                        Tuesday: {
+                            type: "Easy Cardio",
+                            items: [
+                                "Easy 60 min cardio",
+                                "Zone 2 only",
+                                "Recovery emphasis"
+                            ]
+                        },
+                        Wednesday: {
+                            type: "Upper + Climbing",
+                            items: [
+                                "Upper body maintenance",
+                                "Climbing: fun session, don't push hard",
+                                "Enjoy movement"
+                            ]
+                        },
+                        Thursday: {
+                            type: "Recovery",
+                            items: [
+                                "Active recovery",
+                                "Stretching and mobility"
+                            ]
+                        },
+                        Friday: {
+                            type: "Light Circuit",
+                            items: [
+                                "Light full body circuit",
+                                "Moderate intensity only"
+                            ]
+                        },
+                        Saturday: {
+                            type: "Moderate Hike",
+                            items: [
+                                "8-10 hours hiking, 6000 ft gain",
+                                "35 lb pack",
+                                "Recovery week - easier than Week 10",
+                                "Phase 3 complete!"
+                            ]
+                        },
+                        Sunday: {
+                            type: "Recovery",
+                            items: [
+                                "Complete rest",
+                                "Reflect on Phase 3 gains",
+                                "Prepare for Peak Conditioning phase"
+                            ]
+                        }
+                    }
+                },
+                13: {
+                    phase: "Phase 4: Peak Conditioning",
+                    dates: "Jun 14-20",
+                    days: {
+                        Monday: {
+                            type: "Maintenance Strength",
+                            items: [
+                                "Back Squats: 4x8 at challenging weight",
+                                "Bulgarian Split Squats: 3x10 each",
+                                "Deadlifts: 3x6",
+                                "Weighted Step-ups: 3x10 each (heavier)",
+                                "Core: Weighted carries, planks with movement"
+                            ]
+                        },
+                        Tuesday: {
+                            type: "Vertical Intervals",
+                            items: [
+                                "Steep trail repeats: 6-8x 10-15 min hard uphills OR",
+                                "Stairmaster with 30 lb pack: 5 min hard / 2 min easy x8",
+                                "Focus on maintaining pace under load"
+                            ]
+                        },
+                        Wednesday: {
+                            type: "Upper + Climbing",
+                            items: [
+                                "Weighted Pull-ups: 4x8",
+                                "Overhead Press: 4x8",
+                                "Rows: 4x10",
+                                "Rock climbing: 60-90 min, projects or outdoor",
+                                "Enjoy summer climbing season!"
+                            ]
+                        },
+                        Thursday: {
+                            type: "Moderate Cardio",
+                            items: [
+                                "Trail run or hike 60-90 min, 30 lb pack",
+                                "Zone 2-3 intensity",
+                                "Keep it moderate"
+                            ]
+                        },
+                        Friday: {
+                            type: "Power Maintenance",
+                            items: [
+                                "Olympic lifts or KB swings: 5x5",
+                                "Box jumps: 3x8",
+                                "Goblet squats: 3x12",
+                                "Farmer's carries: Heavy, 3x 75m",
+                                "Core circuit: 20 min"
+                            ]
+                        },
+                        Saturday: {
+                            type: "Peak Simulation",
+                            items: [
+                                "8-10 hours hiking, 6000 ft gain",
+                                "40 lb pack (SUMMIT WEIGHT)",
+                                "First time with full summit pack",
+                                "Practice with actual gear configuration"
+                            ]
+                        },
+                        Sunday: {
+                            type: "Recovery",
+                            items: [
+                                "Light activity 30-45 min OR complete rest",
+                                "Extensive stretching, foam rolling, mobility"
+                            ]
+                        }
+                    }
+                },
+                14: {
+                    phase: "Phase 4: Peak Conditioning",
+                    dates: "Jun 21-27",
+                    days: {
+                        Monday: {
+                            type: "Maintenance Strength",
+                            items: [
+                                "Squats: 4x8",
+                                "Bulgarian Split Squats: 3x10 each",
+                                "Deadlifts: 3x6",
+                                "Step-ups and core"
+                            ]
+                        },
+                        Tuesday: {
+                            type: "Vertical Intervals",
+                            items: [
+                                "Steep intervals with 30 lb pack",
+                                "6-8 hard efforts",
+                                "Power under load"
+                            ]
+                        },
+                        Wednesday: {
+                            type: "Upper + Climbing",
+                            items: [
+                                "Upper body maintenance",
+                                "Climbing: outdoor or gym",
+                                "Balance with mountaineering training"
+                            ]
+                        },
+                        Thursday: {
+                            type: "Cardio",
+                            items: [
+                                "60-90 min moderate cardio",
+                                "30 lb pack option"
+                            ]
+                        },
+                        Friday: {
+                            type: "Power",
+                            items: [
+                                "Power maintenance work",
+                                "Core circuit"
+                            ]
+                        },
+                        Saturday: {
+                            type: "LONGEST DAY",
+                            items: [
+                                "10-12 hours hiking, 6500 ft gain",
+                                "40 lb pack",
+                                "LONGEST TRAINING DAY OF PROGRAM",
+                                "Mental and physical peak challenge",
+                                "Prove you can do the distance"
+                            ]
+                        },
+                        Sunday: {
+                            type: "Recovery",
+                            items: [
+                                "Complete rest after epic day",
+                                "Full recovery protocols",
+                                "You've proved your fitness!"
+                            ]
+                        }
+                    }
+                },
+                15: {
+                    phase: "Phase 4: Peak Conditioning",
+                    dates: "Jun 28-Jul 4",
+                    days: {
+                        Monday: {
+                            type: "Strength",
+                            items: [
+                                "Maintenance strength session",
+                                "Keep intensity, reduce volume slightly"
+                            ]
+                        },
+                        Tuesday: {
+                            type: "Intervals",
+                            items: [
+                                "Vertical intervals with pack",
+                                "6-8 efforts"
+                            ]
+                        },
+                        Wednesday: {
+                            type: "Upper + Climbing",
+                            items: [
+                                "Upper body work",
+                                "Climbing session"
+                            ]
+                        },
+                        Thursday: {
+                            type: "Cardio",
+                            items: [
+                                "Moderate cardio 60-90 min",
+                                "With pack"
+                            ]
+                        },
+                        Friday: {
+                            type: "Power",
+                            items: [
+                                "Power work",
+                                "Core exercises",
+                                "Prep for alpine start practice"
+                            ]
+                        },
+                        Saturday: {
+                            type: "ALPINE START PRACTICE",
+                            items: [
+                                "START AT 3-4 AM (practice summit day timing)",
+                                "8-10 hours hiking, 6000 ft gain",
+                                "40 lb pack",
+                                "Practice pre-dawn routine, headlamp use",
+                                "Test summit day nutrition timing",
+                                "Mental preparation for early start"
+                            ]
+                        },
+                        Sunday: {
+                            type: "Recovery",
+                            items: [
+                                "Rest and recovery",
+                                "Assess alpine start experience"
+                            ]
+                        }
+                    }
+                },
+                16: {
+                    phase: "Phase 4: Peak Conditioning",
+                    dates: "Jul 5-11",
+                    days: {
+                        Monday: {
+                            type: "Strength",
+                            items: [
+                                "Maintenance strength",
+                                "Keep form perfect",
+                                "Moderate volume"
+                            ]
+                        },
+                        Tuesday: {
+                            type: "Intervals",
+                            items: [
+                                "Vertical intervals",
+                                "30 lb pack",
+                                "6 efforts"
+                            ]
+                        },
+                        Wednesday: {
+                            type: "Upper + Climbing",
+                            items: [
+                                "Upper body maintenance",
+                                "Climbing: enjoy movement",
+                                "Rock season in full swing"
+                            ]
+                        },
+                        Thursday: {
+                            type: "Cardio",
+                            items: [
+                                "60-90 min moderate cardio",
+                                "Keep it comfortable"
+                            ]
+                        },
+                        Friday: {
+                            type: "Power",
+                            items: [
+                                "Power and core work",
+                                "Moderate intensity"
+                            ]
+                        },
+                        Saturday: {
+                            type: "Peak Simulation",
+                            items: [
+                                "8-10 hours hiking, 6000 ft gain",
+                                "40 lb pack",
+                                "Confidence-building day",
+                                "You're ready for this!"
+                            ]
+                        },
+                        Sunday: {
+                            type: "Recovery",
+                            items: [
+                                "Recovery protocols",
+                                "Prepare for final peak week"
+                            ]
+                        }
+                    }
+                },
+                17: {
+                    phase: "Phase 4: Peak Conditioning",
+                    dates: "Jul 12-18 (First Taper Week)",
+                    dates: "Jul 12-18",
+                    days: {
+                        Monday: {
+                            type: "Light Strength",
+                            items: [
+                                "Reduced volume strength",
+                                "3 sets instead of 4",
+                                "Reduce weight by 20%",
+                                "Beginning taper"
+                            ]
+                        },
+                        Tuesday: {
+                            type: "Easy Cardio",
+                            items: [
+                                "Easy 60 min cardio",
+                                "Zone 2 only",
+                                "Start recovery process"
+                            ]
+                        },
+                        Wednesday: {
+                            type: "Light Upper + Climbing",
+                            items: [
+                                "Light upper body",
+                                "Easy climbing 45 min",
+                                "Reduce intensity"
+                            ]
+                        },
+                        Thursday: {
+                            type: "Rest/Easy",
+                            items: [
+                                "Rest or easy walk 30 min",
+                                "Mobility work"
+                            ]
+                        },
+                        Friday: {
+                            type: "Light Circuit",
+                            items: [
+                                "Light circuit or yoga",
+                                "Very easy"
+                            ]
+                        },
+                        Saturday: {
+                            type: "Moderate Hike",
+                            items: [
+                                "6-8 hours hiking, 4500 ft gain",
+                                "35 lb pack (reduced)",
+                                "Easy pace, beginning taper",
+                                "Phase 4 complete!"
+                            ]
+                        },
+                        Sunday: {
+                            type: "Rest",
+                            items: [
+                                "Complete rest",
+                                "You're in peak condition!",
+                                "Now we let the body recover and supercompensate"
+                            ]
+                        }
+                    }
+                },
+                18: {
+                    phase: "Phase 5: Taper + Event Prep",
+                    dates: "Jul 19-25",
+                    days: {
+                        Monday: {
+                            type: "Light Strength",
+                            items: [
+                                "Light strength session - 3 sets, reduce weight 20%",
+                                "Focus on form, not intensity",
+                                "Keep movements familiar"
+                            ]
+                        },
+                        Tuesday: {
+                            type: "Easy Cardio",
+                            items: [
+                                "Easy 60 min cardio",
+                                "Zone 2 maximum",
+                                "Enjoying movement, not training hard"
+                            ]
+                        },
+                        Wednesday: {
+                            type: "Light Upper + Climbing",
+                            items: [
+                                "Light upper body - 2-3 sets",
+                                "Easy climbing 45 min",
+                                "Fun, not challenging"
+                            ]
+                        },
+                        Thursday: {
+                            type: "Rest/Easy",
+                            items: [
+                                "Rest or easy walk 30 min",
+                                "Stretching and mobility"
+                            ]
+                        },
+                        Friday: {
+                            type: "Light Activity",
+                            items: [
+                                "Light circuit or yoga",
+                                "Very gentle movement"
+                            ]
+                        },
+                        Saturday: {
+                            type: "Moderate Hike",
+                            items: [
+                                "4-5 hours hiking, 3000 ft gain",
+                                "30 lb pack (reduced from peak)",
+                                "50% of peak volume",
+                                "Easy, confident pace"
+                            ]
+                        },
+                        Sunday: {
+                            type: "Rest",
+                            items: [
+                                "Complete rest",
+                                "Recovery and relaxation"
+                            ]
+                        }
+                    }
+                },
+                19: {
+                    phase: "Phase 5: Taper + Event Prep",
+                    dates: "Jul 26-Aug 1",
+                    days: {
+                        Monday: {
+                            type: "Very Light",
+                            items: [
+                                "Very light strength - 2 sets, bodyweight or minimal load",
+                                "Just maintaining movement patterns",
+                                "15-20 min total"
+                            ]
+                        },
+                        Tuesday: {
+                            type: "Easy Walk",
+                            items: [
+                                "Easy 45 min walk or bike",
+                                "Very gentle",
+                                "Fresh air and movement"
+                            ]
+                        },
+                        Wednesday: {
+                            type: "Rest/Stretch",
+                            items: [
+                                "Rest or gentle stretching only",
+                                "No climbing",
+                                "Deep taper"
+                            ]
+                        },
+                        Thursday: {
+                            type: "Easy Activity",
+                            items: [
+                                "Easy 30 min activity",
+                                "Keep it super light"
+                            ]
+                        },
+                        Friday: {
+                            type: "Rest",
+                            items: [
+                                "Complete rest",
+                                "Gear organization"
+                            ]
+                        },
+                        Saturday: {
+                            type: "Short Hike",
+                            items: [
+                                "2-3 hours easy hike, 1500 ft gain",
+                                "20 lb pack (minimal effort)",
+                                "Just moving, not training",
+                                "Shakeout only"
+                            ]
+                        },
+                        Sunday: {
+                            type: "Rest",
+                            items: [
+                                "Complete rest",
+                                "Final gear check",
+                                "Mental preparation"
+                            ]
+                        }
+                    }
+                },
+                20: {
+                    phase: "Phase 5: Taper + Event Prep - SUMMIT WEEK",
+                    dates: "Aug 2-11",
+                    days: {
+                        Monday: {
+                            type: "Rest",
+                            items: [
+                                "Complete rest or very light walking only (10-15 min max)",
+                                "Hydration focus begins",
+                                "Start carb loading (450-500g carbs)",
+                                "Mental visualization"
+                            ]
+                        },
+                        Tuesday: {
+                            type: "Rest",
+                            items: [
+                                "Complete rest",
+                                "Easy 20-30 min walk maximum",
+                                "Mobility work",
+                                "Continue carb loading"
+                            ]
+                        },
+                        Wednesday: {
+                            type: "Rest",
+                            items: [
+                                "Complete rest",
+                                "Hydration: 100+ oz water with electrolytes",
+                                "Carb loading continues",
+                                "Reduce fiber intake"
+                            ]
+                        },
+                        Thursday: {
+                            type: "Minimal Activity",
+                            items: [
+                                "Minimal activity - 15-20 min easy walk only",
+                                "Final logistics and packing",
+                                "Continue nutrition protocol"
+                            ]
+                        },
+                        Friday: {
+                            type: "Rest",
+                            items: [
+                                "Complete rest",
+                                "Visualization and mental prep",
+                                "Final gear check"
+                            ]
+                        },
+                        Saturday: {
+                            type: "Rest",
+                            items: [
+                                "Complete rest",
+                                "Last-minute preparations"
+                            ]
+                        },
+                        Sunday: {
+                            type: "Travel + Arrival",
+                            items: [
+                                "TRAVEL TO MT. RAINIER",
+                                "Arrive at base/Paradise",
+                                "Short shakeout walk only (20 min max)",
+                                "Check in with guide service",
+                                "Early dinner (high-carb, low fiber)",
+                                "Early to bed - BIG DAY AHEAD!"
+                            ]
+                        },
+                        Monday: {
+                            type: "SUMMIT DAY PREP",
+                            items: [
+                                "August 9: Acclimatization day",
+                                "Short hike to Camp Muir or similar (guide-dependent)",
+                                "Practice with gear",
+                                "Rest at base",
+                                "Hydrate constantly",
+                                "High-carb meals",
+                                "Early to bed (7-8 PM)"
+                            ]
+                        },
+                        Tuesday: {
+                            type: "PRE-SUMMIT REST",
+                            items: [
+                                "August 10: Final rest day",
+                                "Minimal activity",
+                                "Stay hydrated - drink before thirsty",
+                                "High-carb, low-fiber meals",
+                                "Gear check and prep",
+                                "Mental preparation",
+                                "In bed by 6-7 PM for midnight/2 AM start"
+                            ]
+                        },
+                        Wednesday: {
+                            type: "🏔️ SUMMIT DAY 🏔️",
+                            items: [
+                                "AUGUST 11 - MT. RAINIER SUMMIT",
+                                "2 AM wake-up (or per guide schedule)",
+                                "Pre-climb meal: oatmeal, banana, honey, coffee",
+                                "Start climb: 3-4 AM alpine start",
+                                "Climb nutrition: 60-90g carbs/hour (gels, blocks, bars)",
+                                "Hydration: 20-30 oz/hour with electrolytes",
+                                "Use rest step technique and pressure breathing",
+                                "ONE STEP AT A TIME",
+                                "REACH THE SUMMIT - YOU'VE EARNED THIS!",
+                                "Safe descent - summit is halfway",
+                                "Celebrate your incredible achievement! 🎉"
+                            ]
+                        }
+                    }
+                }
+            }
+        };
+
+        let currentWeek = 1;
+        let weekProgress = {};
+
+        // Initialize or load progress from localStorage
+        function initProgress() {
+            const saved = localStorage.getItem('rainierProgress');
+            if (saved) {
+                weekProgress = JSON.parse(saved);
+            } else {
+                // Initialize empty progress for all weeks
+                for (let i = 1; i <= 20; i++) {
+                    weekProgress[i] = {};
+                    const weekData = trainingData.weeks[i];
+                    if (weekData) {
+                        Object.keys(weekData.days).forEach(day => {
+                            weekProgress[i][day] = {
+                                items: Array(weekData.days[day].items.length).fill(false),
+                                notes: ''
+                            };
+                        });
+                    }
+                }
+                saveProgress();
+            }
+        }
+
+        function saveProgress() {
+            localStorage.setItem('rainierProgress', JSON.stringify(weekProgress));
+            updateStats();
+        }
+
+        function updateStats() {
+            let totalWorkouts = 0;
+            let completedWorkouts = 0;
+            let completedWeeks = 0;
+
+            for (let week = 1; week <= 20; week++) {
+                let weekComplete = true;
+                const weekData = trainingData.weeks[week];
+                if (weekData) {
+                    Object.keys(weekData.days).forEach(day => {
+                        totalWorkouts++;
+                        const dayProgress = weekProgress[week][day];
+                        const allChecked = dayProgress.items.every(item => item);
+                        if (allChecked) {
+                            completedWorkouts++;
+                        } else {
+                            weekComplete = false;
+                        }
+                    });
+                }
+                if (weekComplete) completedWeeks++;
+            }
+
+            const progressPercent = Math.round((completedWorkouts / totalWorkouts) * 100);
+            document.getElementById('overall-progress').textContent = progressPercent + '%';
+            document.getElementById('progress-fill').style.width = progressPercent + '%';
+            document.getElementById('weeks-completed').textContent = completedWeeks;
+            document.getElementById('total-workouts').textContent = completedWorkouts;
+        }
+
+        function renderWeekSelector() {
+            const selector = document.getElementById('week-selector');
+            selector.innerHTML = '';
+
+            for (let i = 1; i <= 20; i++) {
+                const btn = document.createElement('button');
+                btn.className = 'week-btn';
+                btn.textContent = `Week ${i}`;
+                
+                // Check if week is completed
+                const weekData = trainingData.weeks[i];
+                let weekComplete = true;
+                if (weekData) {
+                    Object.keys(weekData.days).forEach(day => {
+                        const dayProgress = weekProgress[i][day];
+                        if (!dayProgress.items.every(item => item)) {
+                            weekComplete = false;
+                        }
+                    });
+                }
+
+                if (weekComplete) {
+                    btn.classList.add('completed');
+                } else if (i === currentWeek) {
+                    btn.classList.add('active');
+                }
+
+                btn.onclick = () => {
+                    currentWeek = i;
+                    renderWeek();
+                    renderWeekSelector();
+                };
+
+                selector.appendChild(btn);
+            }
+
+            // Scroll to current week
+            const activeBtn = selector.querySelector('.week-btn.active');
+            if (activeBtn) {
+                activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            }
+        }
+
+        function renderWeek() {
+            const content = document.getElementById('content');
+            const weekData = trainingData.weeks[currentWeek];
+
+            if (!weekData) {
+                content.innerHTML = '<div class="phase-card"><p>Week data not available</p></div>';
+                return;
+            }
+
+            // Check for summit day
+            if (currentWeek === 20) {
+                content.innerHTML = `
+                    <div class="summit-day">
+                        <h2>⛰️ SUMMIT WEEK ⛰️</h2>
+                        <p>Your moment has arrived. Trust your training. You're ready!</p>
+                    </div>
+                `;
+            } else {
+                content.innerHTML = '';
+            }
+
+            const card = document.createElement('div');
+            card.className = 'phase-card';
+
+            card.innerHTML = `
+                <div class="phase-header">${weekData.phase}</div>
+                <div class="week-title">Week ${currentWeek}: ${weekData.dates}</div>
+            `;
+
+            Object.keys(weekData.days).forEach(day => {
+                const dayData = weekData.days[day];
+                const dayProgress = weekProgress[currentWeek][day];
+
+                const daySection = document.createElement('div');
+                daySection.className = 'day-section';
+
+                const allChecked = dayProgress.items.every(item => item);
+
+                daySection.innerHTML = `
+                    <div class="day-header">
+                        <div class="day-title">${day}</div>
+                        <div class="day-type">${dayData.type}</div>
+                    </div>
+                `;
+
+                dayData.items.forEach((item, index) => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'checklist-item';
+
+                    const checkbox = document.createElement('div');
+                    checkbox.className = 'checkbox';
+                    if (dayProgress.items[index]) {
+                        checkbox.classList.add('checked');
+                    }
+
+                    checkbox.onclick = () => {
+                        dayProgress.items[index] = !dayProgress.items[index];
+                        saveProgress();
+                        renderWeek();
+                        renderWeekSelector();
+                    };
+
+                    const text = document.createElement('div');
+                    text.className = 'item-text';
+                    if (dayProgress.items[index]) {
+                        text.classList.add('completed');
+                    }
+                    text.textContent = item;
+
+                    itemDiv.appendChild(checkbox);
+                    itemDiv.appendChild(text);
+                    daySection.appendChild(itemDiv);
+                });
+
+                // Notes section
+                const notesSection = document.createElement('div');
+                notesSection.className = 'notes-section';
+                notesSection.innerHTML = `
+                    <div class="notes-label">Notes</div>
+                    <textarea class="notes-input" placeholder="How did it go? Energy levels, observations, etc.">${dayProgress.notes}</textarea>
+                `;
+
+                const textarea = notesSection.querySelector('textarea');
+                textarea.oninput = (e) => {
+                    dayProgress.notes = e.target.value;
+                    saveProgress();
+                };
+
+                daySection.appendChild(notesSection);
+                card.appendChild(daySection);
+            });
+
+            content.appendChild(card);
+
+            // Add reset button at bottom for testing
+            if (currentWeek === 1) {
+                const resetDiv = document.createElement('div');
+                resetDiv.style.textAlign = 'center';
+                resetDiv.style.marginTop = '20px';
+                resetDiv.innerHTML = '<button class="reset-btn" onclick="resetProgress()">Reset All Progress</button>';
+                content.appendChild(resetDiv);
+            }
+        }
+
+        function resetProgress() {
+            if (confirm('Are you sure you want to reset all progress? This cannot be undone.')) {
+                localStorage.removeItem('rainierProgress');
+                weekProgress = {};
+                initProgress();
+                renderWeek();
+                renderWeekSelector();
+            }
+        }
+
+        // Navigation
+        document.getElementById('prev-btn').onclick = () => {
+            if (currentWeek > 1) {
+                currentWeek--;
+                renderWeek();
+                renderWeekSelector();
+                window.scrollTo(0, 0);
+            }
+        };
+
+        document.getElementById('next-btn').onclick = () => {
+            if (currentWeek < 20) {
+                currentWeek++;
+                renderWeek();
+                renderWeekSelector();
+                window.scrollTo(0, 0);
+            }
+        };
+
+        // Initialize
+        initProgress();
+        renderWeekSelector();
+        renderWeek();
+    </script>
+</body>
+</html>
